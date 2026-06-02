@@ -1,34 +1,47 @@
 package com.autowash.service;
 
-import com.autowash.dto.response.AuthResponse;
 import com.autowash.dto.request.LoginRequest;
 import com.autowash.dto.request.RegisterRequest;
-import com.autowash.enums.Role;
+import com.autowash.dto.response.AuthResponse;
+import com.autowash.entity.CustomerProfile;
+import com.autowash.entity.TierConfig;
 import com.autowash.entity.User;
-import com.autowash.repository.UserRepository;
+import com.autowash.enums.Role;
+import com.autowash.enums.TierLevel;
+import com.autowash.enums.UserStatus;
 import com.autowash.infrastructure.security.JwtService;
+import com.autowash.repository.CustomerProfileRepository;
+import com.autowash.repository.TierConfigRepository;
+import com.autowash.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CustomerProfileRepository customerProfileRepository;
+    private final TierConfigRepository tierConfigRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByPhone(request.getPhone())) {
-            throw new RuntimeException("Phone number already exists");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Phone number already exists"
+            );
         }
 
         Role role = request.getRole();
+
         if (role == null) {
             role = Role.CUSTOMER;
         }
@@ -40,11 +53,28 @@ public class AuthService {
                 .role(role)
                 .build();
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getPhone(), user.getRole().name());
+        if (savedUser.getRole() == Role.CUSTOMER) {
+            TierConfig memberTier = tierConfigRepository.findById(TierLevel.MEMBER)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Default MEMBER tier config not found"
+                    ));
 
-        return new AuthResponse(token, user.getRole().name());
+            CustomerProfile profile = CustomerProfile.builder()
+                    .user(savedUser)
+                    .tierConfig(memberTier)
+                    .rewardPoints(0)
+                    .tierPoints(0)
+                    .build();
+
+            customerProfileRepository.save(profile);
+        }
+
+        String token = jwtService.generateToken(savedUser.getPhone(), savedUser.getRole().name());
+
+        return new AuthResponse(token, savedUser.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -54,6 +84,13 @@ public class AuthService {
                         HttpStatus.UNAUTHORIZED,
                         "Invalid phone or password"
                 ));
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Account is locked or disabled"
+            );
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
