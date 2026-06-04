@@ -74,7 +74,11 @@ public class AuthService {
 
         String token = jwtService.generateToken(savedUser.getPhone(), savedUser.getRole().name());
 
-        return new AuthResponse(token, savedUser.getRole().name());
+        return new AuthResponse(
+                token,
+                savedUser.getRole().name(),
+                getDashboardUrlByRole(savedUser.getRole())
+        );
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -101,6 +105,20 @@ public class AuthService {
 
         String token = jwtService.generateToken(user.getPhone(), user.getRole().name());
 
-        return new AuthResponse(token, user.getRole().name());
+        return new AuthResponse(token, user.getRole().name(), getDashboardUrlByRole(user.getRole()));
     }
+
+    private String getDashboardUrlByRole(Role role) {
+        if (role == Role.ADMIN) {
+            return "/admin/dashboard";
+        }
+
+        if (role == Role.STAFF) {
+            return "/staff/dashboard";
+        }
+
+        return "/customer/dashboard";
+    }
+
+
 }
