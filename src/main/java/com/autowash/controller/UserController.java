@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+import com.autowash.dto.response.AdminCustomerResponse;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -34,4 +34,11 @@ public class UserController {
     public UserResponse unlockUser(@PathVariable Long id) {
         return userService.unlockUser(id);
     }
+
+
+    @GetMapping("/customers")
+    public List<AdminCustomerResponse> getAllCustomersForAdmin() {
+        return userService.getAllCustomersForAdmin();
+    }
+
 }

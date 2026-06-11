@@ -8,6 +8,8 @@ import com.autowash.entity.CustomerProfile;
 import com.autowash.entity.User;
 import com.autowash.enums.Role;
 import com.autowash.enums.UserStatus;
+import com.autowash.repository.BookingRepository;
+import com.autowash.repository.CarRepository;
 import com.autowash.repository.CustomerProfileRepository;
 import com.autowash.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+
+
+import com.autowash.dto.response.AdminCustomerResponse;
+import com.autowash.repository.CarRepository;
+import com.autowash.repository.BookingRepository;
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -28,6 +35,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final PasswordEncoder passwordEncoder;
+
+
+    private final CarRepository carRepository;
+    private final BookingRepository bookingRepository;
+
 
     public User getCurrentUserEntity() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -177,4 +189,24 @@ public class UserService {
 
         return UserResponse.fromUser(savedUser);
     }
+
+    public List<AdminCustomerResponse> getAllCustomersForAdmin() {
+        return customerProfileRepository.findAll()
+                .stream()
+                .map(profile -> {
+                    Long userId = profile.getUser().getId();
+
+                    int carCount = carRepository.countByUserId(userId);
+                    int bookingCount = bookingRepository.countByUserId(userId);
+
+                    return AdminCustomerResponse.fromProfile(
+                            profile,
+                            carCount,
+                            bookingCount
+                    );
+                })
+                .toList();
+    }
+
+
 }

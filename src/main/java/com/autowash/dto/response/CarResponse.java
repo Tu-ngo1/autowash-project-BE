@@ -14,10 +14,16 @@ public class CarResponse {
     private VehicleSize vehicleSize;
 
     public static CarResponse fromCar(Car car) {
+
+
+
         return new CarResponse(
                 car.getId(),
                 car.getLicensePlate(),
                 car.getVehicleModel().getVehicleSize()
         );
     }
+
+
+
 }
