@@ -8,8 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -23,30 +21,33 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "CARS")
+@Table(name = "VEHICLE_MODELS")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Car {
+public class VehicleModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(nullable = false)
+    private String brand;
 
-    @Column(name = "License_plate", nullable = false)
-    private String licensePlate;
+    @Column(name = "Model_name", nullable = false)
+    private String modelName;
 
-    @ManyToOne
-    @JoinColumn(name = "vehicle_model_id", nullable = false)
-    private VehicleModel vehicleModel;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Vehicle_size", nullable = false)
+    private VehicleSize vehicleSize;
+
+    @Builder.Default
+    @Column(name = "Is_active", nullable = false)
+    private Boolean active = true;
 
     @Column(name = "Created_at")
     private LocalDateTime createdAt;

@@ -14,10 +14,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @GetMapping("/test")
-    public String test() {
-        return "Auth API is working";
-    }
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) {
