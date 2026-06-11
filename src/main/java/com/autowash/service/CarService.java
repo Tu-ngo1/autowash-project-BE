@@ -5,7 +5,9 @@ import com.autowash.dto.request.UpdateCarRequest;
 import com.autowash.dto.response.CarResponse;
 import com.autowash.entity.Car;
 import com.autowash.entity.User;
+import com.autowash.entity.VehicleModel;
 import com.autowash.repository.CarRepository;
+import com.autowash.repository.VehicleModelRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class CarService {
 
     private final CarRepository carRepository;
     private final UserService userService;
+    private final VehicleModelRepository vehicleModelRepository;
 
     public List<CarResponse> getMyCars() {
         User currentUser = userService.getCurrentUserEntity();
@@ -55,10 +58,17 @@ public class CarService {
             );
         }
 
+        VehicleModel vehicleModel = vehicleModelRepository
+                .findByVehicleSize(request.getVehicleSize())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Vehicle model not found"
+                ));
+
         Car car = Car.builder()
                 .user(currentUser)
                 .licensePlate(request.getLicensePlate())
-                .vehicleSize(request.getVehicleSize())
+                .vehicleModel(vehicleModel)
                 .build();
 
         Car savedCar = carRepository.save(car);
@@ -89,7 +99,14 @@ public class CarService {
         }
 
         if (request.getVehicleSize() != null) {
-            car.setVehicleSize(request.getVehicleSize());
+            VehicleModel vehicleModel = vehicleModelRepository
+                    .findByVehicleSize(request.getVehicleSize())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Vehicle model not found"
+                    ));
+
+            car.setVehicleModel(vehicleModel);
         }
 
         Car savedCar = carRepository.save(car);

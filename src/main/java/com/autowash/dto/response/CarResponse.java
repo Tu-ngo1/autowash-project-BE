@@ -17,7 +17,7 @@ public class CarResponse {
         return new CarResponse(
                 car.getId(),
                 car.getLicensePlate(),
-                car.getVehicleSize()
+                car.getVehicleModel().getVehicleSize()
         );
     }
 }
