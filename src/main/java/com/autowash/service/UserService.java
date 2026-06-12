@@ -28,9 +28,9 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
         }
 
-        String phone = authentication.getName();
+        String email = authentication.getName();
 
-        return userRepository.findByPhone(phone)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
                         "User not found"
